@@ -66,15 +66,10 @@
 #include <octomap/octomap.h>
 #include <octomap/OcTreeKey.h>
 
-#define COLOR_OCTOMAP_SERVER // turned off here, turned on identical ColorOctomapServer.h - easier maintenance, only maintain OctomapServer and then copy and paste to ColorOctomapServer and change define. There are prettier ways to do this, but this works for now
+//#define COLOR_OCTOMAP_SERVER // turned off here, turned on identical ColorOctomapServer.h - easier maintenance, only maintain OctomapServer and then copy and paste to ColorOctomapServer and change define. There are prettier ways to do this, but this works for now
 
 #ifdef COLOR_OCTOMAP_SERVER
-//#include <octomap/AngleOcTree.h>
- //#include "AngleOcTree.h"
-//#include "octomap/ColorOcTree.h"
-
-#include "AngleOcTree/AngleOcTree.h"
-#include "ActiveSense/Core/Model.h"
+#include <octomap/ColorOcTree.h>
 #endif
 
 namespace octomap_server {
@@ -82,18 +77,13 @@ class OctomapServer {
 
 public:
 #ifdef COLOR_OCTOMAP_SERVER
-  typedef pcl::PointXYZRGBNormal PCLPoint;
-  typedef pcl::PointCloud<pcl::PointXYZRGBNormal> PCLPointCloud;
-  typedef octomap::AngleOcTree OcTreeT;
-  typedef octomap::AngleOcTreeNode OcTreeNodeT;
-
-  //typedef octomap::ColorOcTree OcTreeT;
-  //typedef octomap::ColorOcTreeNode OcTreeNodeT;
+  typedef pcl::PointXYZRGB PCLPoint;
+  typedef pcl::PointCloud<pcl::PointXYZRGB> PCLPointCloud;
+  typedef octomap::ColorOcTree OcTreeT;
 #else
   typedef pcl::PointXYZ PCLPoint;
   typedef pcl::PointCloud<pcl::PointXYZ> PCLPointCloud;
   typedef octomap::OcTree OcTreeT;
-  typedef octomap::OcTreeNode OcTreeNodeT;
 #endif
   typedef octomap_msgs::GetOctomap OctomapSrv;
   typedef octomap_msgs::BoundingBoxQuery BBXSrv;
@@ -134,7 +124,6 @@ protected:
   void publishBinaryOctoMap(const ros::Time& rostime = ros::Time::now()) const;
   void publishFullOctoMap(const ros::Time& rostime = ros::Time::now()) const;
   virtual void publishAll(const ros::Time& rostime = ros::Time::now());
-  void publishNormalMarkers(const Eigen::Matrix4f& sensorToWorld, const ros::Time& rostime = ros::Time::now());
 
   /**
   * @brief update occupancy map with a scan labeled as ground and nonground.
@@ -145,7 +134,6 @@ protected:
   * @param nonground all other endpoints (clear up to occupied endpoint)
   */
   virtual void insertScan(const tf::Point& sensorOrigin, const PCLPointCloud& ground, const PCLPointCloud& nonground);
-  virtual void insertScan(const tf::StampedTransform& sensorToWorldTf/*const tf::Point& sensorOrigin*/, const PCLPointCloud& ground, const PCLPointCloud& nonground);
 
   /// label the input cloud "pc" into ground and nonground. Should be in the robot's fixed frame (not world!)
   void filterGroundPlane(const PCLPointCloud& pc, PCLPointCloud& ground, PCLPointCloud& nonground) const;
@@ -211,14 +199,13 @@ protected:
 
   static std_msgs::ColorRGBA heightMapColor(double h);
   ros::NodeHandle m_nh;
-  ros::Publisher  m_markerNormalPub, m_markerPub, m_binaryMapPub, m_fullMapPub, m_pointCloudPub, m_collisionObjectPub, m_mapPub, m_cmapPub, m_fmapPub, m_fmarkerPub;
+  ros::Publisher  m_markerPub, m_binaryMapPub, m_fullMapPub, m_pointCloudPub, m_collisionObjectPub, m_mapPub, m_cmapPub, m_fmapPub, m_fmarkerPub;
   message_filters::Subscriber<sensor_msgs::PointCloud2>* m_pointCloudSub;
   tf::MessageFilter<sensor_msgs::PointCloud2>* m_tfPointCloudSub;
   ros::ServiceServer m_octomapBinaryService, m_octomapFullService, m_clearBBXService, m_resetService;
   tf::TransformListener m_tfListener;
   dynamic_reconfigure::Server<OctomapServerConfig> m_reconfigureServer;
 
-  active_sense::Model m_model;
   OcTreeT* m_octree;
   octomap::KeyRay m_keyRay;  // temp storage for ray casting
   octomap::OcTreeKey m_updateBBXMin;

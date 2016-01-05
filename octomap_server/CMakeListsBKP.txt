@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(octomap_server)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake-modules/ )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -O3 -fPIC -std=c++11")
-
 set(PACKAGE_DEPENDENCIES
   roscpp
   visualization_msgs
@@ -21,27 +17,9 @@ set(PACKAGE_DEPENDENCIES
 )
 
 
-find_package(ActiveSense REQUIRED)
-add_definitions(-DACTIVE_SENSE_USE_SHARED=0N)
-
-#set(ANGLE_OCTREE_LIB_ROOT_DIR /home/ermano/Projects/angle_octree)
-#set(ANGLE_OCTREE_LIB_INC_DIR ${ANGLE_OCTREE_LIB_ROOT_DIR}/include)
-#set(ANGLE_OCTREE_LIB_DIR ${ANGLE_OCTREE_LIB_ROOT_DIR}/build)
-
-
-# Second way of importing external libraries:
-#find_library(ANGLE_OCTREE_LIBRARIES NAMES libangle_octree.a HINTS ${ANGLE_OCTREE_LIB_DIR})
-#message("ANGLE_OCTREE_LIBRARIES "${ANGLE_OCTREE_LIBRARIES})
-
-
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
-find_package(PCL REQUIRED QUIET COMPONENTS common sample_consensus io segmentation filters surface)
-message("PCL_COMPONENTS: " ${PCL_COMPONENTS})
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-
+find_package(PCL REQUIRED QUIET COMPONENTS common sample_consensus io segmentation filters)
 
 find_package(octomap REQUIRED)
 add_definitions(-DOCTOMAP_NODEBUGOUT)
@@ -51,8 +29,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${OCTOMAP_INCLUDE_DIRS}
-  ${ACTIVE_SENSE_INCLUDE_DIRS}
-#  ${ANGLE_OCTREE_LIB_INC_DIR}
 )
 
 
@@ -69,12 +45,7 @@ set(LINK_LIBS
   ${OCTOMAP_LIBRARIES}
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  ${ACTIVE_SENSE_LIBRARIES}
- # ${ANGLE_OCTREE_LIBRARIES}
 )
-
-
-
 
 add_library(${PROJECT_NAME} src/OctomapServer.cpp src/OctomapServerMultilayer.cpp src/TrackingOctomapServer.cpp)
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
